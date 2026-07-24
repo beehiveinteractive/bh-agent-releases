@@ -8,13 +8,13 @@ access token.
 
 ## Latest release
 
-**v1.0.1**
+**v1.0.3**
 
 | Platform | Archive | Checksum |
 |---|---|---|
-| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.0.1/bh-agent-linux-x86_64.tar.gz) | [.sha256](releases/v1.0.1/bh-agent-linux-x86_64.tar.gz.sha256) |
-| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.0.1/bh-agent-macos-arm64.tar.gz) | [.sha256](releases/v1.0.1/bh-agent-macos-arm64.tar.gz.sha256) |
-| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.0.1/bh-agent-macos-x86_64.tar.gz) | [.sha256](releases/v1.0.1/bh-agent-macos-x86_64.tar.gz.sha256) |
+| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.0.3/bh-agent-linux-x86_64.tar.gz) | [.sha256](releases/v1.0.3/bh-agent-linux-x86_64.tar.gz.sha256) |
+| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.0.3/bh-agent-macos-arm64.tar.gz) | [.sha256](releases/v1.0.3/bh-agent-macos-arm64.tar.gz.sha256) |
+| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.0.3/bh-agent-macos-x86_64.tar.gz) | [.sha256](releases/v1.0.3/bh-agent-macos-x86_64.tar.gz.sha256) |
 
 ## Verify before installing
 
@@ -40,8 +40,8 @@ curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-release
 ### Manual install
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.0.1/bh-agent-linux-x86_64.tar.gz
-curl -fsSLO https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.0.1/bh-agent-linux-x86_64.tar.gz.sha256
+curl -fsSLO https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.0.3/bh-agent-linux-x86_64.tar.gz
+curl -fsSLO https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.0.3/bh-agent-linux-x86_64.tar.gz.sha256
 sha256sum -c bh-agent-linux-x86_64.tar.gz.sha256
 tar -xzf bh-agent-linux-x86_64.tar.gz
 sudo ./bh-agent-linux-x86_64/install.sh --token <DEVICE_TOKEN> --name "$(hostname)" --api https://edm.beehiveinteractive.net/api/v1
