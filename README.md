@@ -8,13 +8,13 @@ access token.
 
 ## Latest release
 
-**v1.1.0**
+**v1.1.1**
 
 | Platform | Archive | Signature | Checksum |
 |---|---|---|---|
-| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.1.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.1.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.1.0/bh-agent-linux-x86_64.tar.gz.sha256) |
-| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.1.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.1.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.1.0/bh-agent-macos-arm64.tar.gz.sha256) |
-| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.1.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.1.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.1.0/bh-agent-macos-x86_64.tar.gz.sha256) |
+| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.1.1/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.1.1/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.1.1/bh-agent-linux-x86_64.tar.gz.sha256) |
+| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.1.1/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.1.1/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.1.1/bh-agent-macos-arm64.tar.gz.sha256) |
+| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.1.1/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.1.1/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.1.1/bh-agent-macos-x86_64.tar.gz.sha256) |
 
 Each release also ships the bare binary (`<asset>.bin`) with its own
 `.bin.sha256` and `.bin.sig.hex`. Those feed the agent's self-update endpoint
@@ -81,7 +81,7 @@ curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-release
 ### Manual install
 
 ```bash
-base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.1.0
+base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.1.1
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sig
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sha256
@@ -101,11 +101,37 @@ Swap the asset name for `bh-agent-macos-arm64.tar.gz` or
 Each archive contains the `bh-agent` binary, `install.sh`/`uninstall.sh`,
 the systemd unit / launchd plist, and `config.example.yaml`.
 
+## Windows
+
+**Not supported. Do not deploy.**
+
+No Windows build is published here, and that is deliberate rather than an
+oversight. CI does compile and test a Windows binary, but it is retained only as
+an internal-testing artifact and is deliberately excluded from every release —
+publishing it alongside the supported builds would invite someone to deploy it.
+
+The blocking gap is file access control. The agent applies Unix permissions
+only, so on Windows the queue database inherits whatever `%ProgramData%` grants
+and is **readable by every local user**. That database holds a rolling multi-day
+record of every process on the host, including other users' names and executable
+paths. Windows also has no service registration (it cannot run as a Windows
+service), no installer, and `bh-agent update` refuses to run.
+
+Use Linux or macOS. Windows support is planned; it is not ready.
+
 ## Older releases
 
 Releases before **v1.1.0** predate release signing and ship checksums only.
 `get-agent.sh` refuses to install them. They remain in `releases/` for
-reference; treat them as unverifiable and upgrade to v1.1.0.
+reference; treat them as unverifiable.
+
+**Do not install v1.1.0.** It is signed and verifies correctly, but its
+installer rejects every valid device token: a character-range check was
+evaluated in collation order rather than ASCII order, so under any UTF-8 locale
+it treated ordinary alphanumerics as non-printable. `--token`, `--token-file`
+and `BH_AGENT_SETUP_TOKEN` were all affected. Fixed in v1.1.1.
+
+Use **v1.1.1** or later.
 
 ## What this repo does not contain
 
