@@ -1,0 +1,9 @@
+# Signing keys must never enter this repository — it is public, and the private
+# key is the only thing standing between repo write access and arbitrary code
+# running as root on every device. Keep the key offline; this is a backstop
+# against `git add -A`, not the primary control.
+*.key
+*.pem
+release.key
+
+.DS_Store
