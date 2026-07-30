@@ -8,13 +8,13 @@ access token.
 
 ## Latest release
 
-**v1.1.2**
+**v1.2.0**
 
 | Platform | Archive | Signature | Checksum |
 |---|---|---|---|
-| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.1.2/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.1.2/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.1.2/bh-agent-linux-x86_64.tar.gz.sha256) |
-| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.1.2/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.1.2/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.1.2/bh-agent-macos-arm64.tar.gz.sha256) |
-| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.1.2/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.1.2/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.1.2/bh-agent-macos-x86_64.tar.gz.sha256) |
+| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.2.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.2.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.2.0/bh-agent-linux-x86_64.tar.gz.sha256) |
+| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.2.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.2.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.2.0/bh-agent-macos-arm64.tar.gz.sha256) |
+| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.2.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.2.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.2.0/bh-agent-macos-x86_64.tar.gz.sha256) |
 
 Each release also ships the bare binary (`<asset>.bin`) with its own
 `.bin.sha256` and `.bin.sig.hex`. Those feed the agent's self-update endpoint
@@ -81,7 +81,7 @@ curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-release
 ### Manual install
 
 ```bash
-base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.1.2
+base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.2.0
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sig
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sha256
@@ -100,6 +100,69 @@ Swap the asset name for `bh-agent-macos-arm64.tar.gz` or
 
 Each archive contains the `bh-agent` binary, `install.sh`/`uninstall.sh`,
 the systemd unit / launchd plist, and `config.example.yaml`.
+
+## Upgrading an existing device
+
+Re-run the same one-liner **with no `--token`, `--name` or `--api`**:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/get-agent.sh | bash
+```
+
+From v1.2.0 the installer detects an existing `config.yaml` and **preserves it** —
+token, API URL, interval and any `screenshots` block are left alone; only the
+binary and the service unit are replaced. That is why no token is needed. Pass
+`--force-config` only when you deliberately want the configuration rewritten, for
+example to rotate the token.
+
+**`bh-agent update` does not work against the current platform.** It calls
+`GET /devices/update`, which the platform does not implement, so the request 404s.
+Upgrade with the one-liner above.
+
+Verify afterwards:
+
+```bash
+bh-agent --version          # expect 1.2.0
+bh-agent config check       # confirms the preserved config still validates
+```
+
+### macOS: Gatekeeper and downloaded files
+
+If you obtain an archive through a **web browser** rather than `curl`, macOS
+stamps every extracted file with `com.apple.quarantine`. The agent is not
+notarized by Apple, so Gatekeeper kills it on launch — you get *"Apple could not
+verify bh-agent is free of malware"* and the process dies with signal 9, with no
+output at all.
+
+`get-agent.sh` uses `curl`, which does not set that attribute, so a normal install
+is unaffected. Git does not store extended attributes either, so files cloned from
+this repo are clean. It only bites a browser download:
+
+```bash
+xattr -cr <extracted-directory>
+```
+
+## What is new in v1.2.0
+
+Opt-in periodic **screen capture** (ADR-008), disabled by default. Upgrading does
+not enable it: a config with no `screenshots` block defaults to off.
+
+To turn it on, on a Mac or an Xorg Linux session:
+
+```bash
+sudo bh-agent screenshots enable --restart
+sudo bh-agent screenshots install    # run via sudo from the account to capture
+bh-agent screenshots status          # session, permission, displays, spool
+```
+
+Capture runs as a separate **per-user** service, because the root daemon has no
+display access on either platform. On macOS it additionally needs Screen Recording
+permission, which only the person at the machine can grant, in System Settings >
+Privacy & Security > Screen Recording. On Linux it needs an **Xorg** session;
+Wayland is detected and skipped.
+
+Screenshots record whatever is on screen. If a device is used by someone else,
+telling them is the operator's responsibility.
 
 ## Windows
 
@@ -121,8 +184,9 @@ Use Linux or macOS. Windows support is planned; it is not ready.
 
 ## Older releases
 
-Only the current release is kept here. Earlier versions have been removed
-rather than left in place, because every one of them fails to install:
+The previous release, **v1.1.2**, is still present so a device can be rolled
+back. Anything older has been removed rather than left in place, because every
+one of those versions fails to install:
 
 - **v1.1.1** — the installer's root-ownership check used BSD `stat` syntax and
   misread its own output on Linux, so it refused to install on every Linux
