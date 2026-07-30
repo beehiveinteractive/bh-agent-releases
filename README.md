@@ -8,13 +8,13 @@ access token.
 
 ## Latest release
 
-**v1.2.0**
+**v1.3.0**
 
 | Platform | Archive | Signature | Checksum |
 |---|---|---|---|
-| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.2.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.2.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.2.0/bh-agent-linux-x86_64.tar.gz.sha256) |
-| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.2.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.2.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.2.0/bh-agent-macos-arm64.tar.gz.sha256) |
-| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.2.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.2.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.2.0/bh-agent-macos-x86_64.tar.gz.sha256) |
+| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.3.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.3.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.3.0/bh-agent-linux-x86_64.tar.gz.sha256) |
+| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.3.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.3.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.3.0/bh-agent-macos-arm64.tar.gz.sha256) |
+| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.3.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.3.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.3.0/bh-agent-macos-x86_64.tar.gz.sha256) |
 
 Each release also ships the bare binary (`<asset>.bin`) with its own
 `.bin.sha256` and `.bin.sig.hex`. Those feed the agent's self-update endpoint
@@ -81,7 +81,7 @@ curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-release
 ### Manual install
 
 ```bash
-base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.2.0
+base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.3.0
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sig
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sha256
@@ -109,7 +109,7 @@ Re-run the same one-liner **with no `--token`, `--name` or `--api`**:
 curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/get-agent.sh | bash
 ```
 
-From v1.2.0 the installer detects an existing `config.yaml` and **preserves it** —
+From v1.3.0 the installer detects an existing `config.yaml` and **preserves it** —
 token, API URL, interval and any `screenshots` block are left alone; only the
 binary and the service unit are replaced. That is why no token is needed. Pass
 `--force-config` only when you deliberately want the configuration rewritten, for
@@ -122,7 +122,7 @@ Upgrade with the one-liner above.
 Verify afterwards:
 
 ```bash
-bh-agent --version          # expect 1.2.0
+bh-agent --version          # expect 1.3.0
 bh-agent config check       # confirms the preserved config still validates
 ```
 
@@ -142,24 +142,64 @@ this repo are clean. It only bites a browser download:
 xattr -cr <extracted-directory>
 ```
 
-## What is new in v1.2.0
+## What is new in v1.3.0
 
-Opt-in periodic **screen capture** (ADR-008), disabled by default. Upgrading does
-not enable it: a config with no `screenshots` block defaults to off.
+**Wayland screen capture**, plus fixes for every problem found testing v1.2.0 on
+real devices.
 
-To turn it on, on a Mac or an Xorg Linux session:
+Screen capture is opt-in and **disabled by default** (ADR-008). Upgrading does not
+enable it: a config with no `screenshots` block defaults to off.
 
 ```bash
 sudo bh-agent screenshots enable --restart
 sudo bh-agent screenshots install    # run via sudo from the account to capture
-bh-agent screenshots status          # session, permission, displays, spool
+bh-agent screenshots status          # NOT under sudo — see below
 ```
 
 Capture runs as a separate **per-user** service, because the root daemon has no
-display access on either platform. On macOS it additionally needs Screen Recording
-permission, which only the person at the machine can grant, in System Settings >
-Privacy & Security > Screen Recording. On Linux it needs an **Xorg** session;
-Wayland is detected and skipped.
+display access on either platform.
+
+### macOS
+
+Needs **Screen Recording** permission, which no API can grant — only the person at
+the machine can:
+
+System Settings > Privacy & Security > Screen Recording > **+** > `⌘⇧G` >
+`/usr/local/bin/bh-agent` > enable the toggle. Then re-run
+`sudo bh-agent screenshots install` to restart the capture agent.
+
+Without it, macOS returns the desktop wallpaper with every other application's
+windows stripped out — captures look valid but show nothing useful. v1.3.0 refuses
+to capture in that state rather than uploading wallpaper; v1.2.0 uploaded it.
+
+### Linux
+
+Works on **both Wayland and Xorg** (ADR-009). Wayland goes through
+`xdg-desktop-portal`, which a standard desktop install already provides
+(`xdg-desktop-portal-gnome` on Ubuntu). The portal asks for consent the first time
+and the desktop remembers the answer, so later captures are silent.
+
+Ubuntu 26.04 ships GNOME 49+, which **removed the Xorg session entirely** — there
+is no "Ubuntu on Xorg" option and none is needed. On Wayland the portal composites
+all monitors into a single image, so multi-monitor devices report one display
+rather than one per monitor; Xorg still reports each separately.
+
+### Checking status
+
+Run `bh-agent screenshots status` **without sudo**. Under sudo it reports root's
+session and root's permission state, not the capture user's — which is misleading,
+because the capture agent runs as the logged-in user.
+
+### Fixed since v1.2.0
+
+- macOS: refuses to capture without Screen Recording consent, instead of uploading
+  wallpaper-only frames
+- macOS: `screenshots install` now loads the capture agent correctly (v1.2.0 failed
+  with `Bootstrap failed: 5`)
+- The per-user service no longer respawns every 10 seconds on devices where capture
+  cannot run; one v1.2.0 device reached 345 restarts
+- Session detection no longer mistakes a Wayland desktop for Xorg when run under
+  sudo
 
 Screenshots record whatever is on screen. If a device is used by someone else,
 telling them is the operator's responsibility.
@@ -184,22 +224,20 @@ Use Linux or macOS. Windows support is planned; it is not ready.
 
 ## Older releases
 
-The previous release, **v1.1.2**, is still present so a device can be rolled
-back. Anything older has been removed rather than left in place, because every
-one of those versions fails to install:
+Only the current release is kept here. Earlier versions are removed rather than
+left in place: every one of them either fails to install or predates a fix that
+matters.
 
-- **v1.1.1** — the installer's root-ownership check used BSD `stat` syntax and
-  misread its own output on Linux, so it refused to install on every Linux
-  machine. Fixed in v1.1.2.
-- **v1.1.0** — the installer rejected every valid device token: a character
-  range was evaluated in collation order rather than ASCII order, so under any
-  UTF-8 locale it treated ordinary alphanumerics as non-printable. `--token`,
-  `--token-file` and `BH_AGENT_SETUP_TOKEN` were all affected. Fixed in v1.1.1.
-- **v1.0.x** — predates release signing and shipped checksums only.
-  `get-agent.sh` refuses to install anything unsigned.
+- **v1.2.0** — shipped screen capture with a macOS permission gate that had been
+  weakened, so a Mac without Screen Recording consent uploaded pictures of the
+  desktop wallpaper instead of the screen. Its per-user capture service also used
+  a restart policy that respawned every 10 seconds forever on any device where
+  capture could not run. Both fixed in v1.3.0.
+- **v1.1.x and earlier** — predate screen capture, and the v1.1.0/v1.1.1
+  installers rejected valid tokens or refused to install on Linux.
 
-If a device is still running one of these, reinstall from the current release
-rather than trying to upgrade in place.
+If a device is still running one of these, upgrade from the current release
+rather than trying to patch in place.
 
 ## What this repo does not contain
 
