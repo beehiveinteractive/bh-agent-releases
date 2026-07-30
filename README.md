@@ -8,13 +8,13 @@ access token.
 
 ## Latest release
 
-**v1.3.0**
+**v1.3.1**
 
 | Platform | Archive | Signature | Checksum |
 |---|---|---|---|
-| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.3.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.3.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.3.0/bh-agent-linux-x86_64.tar.gz.sha256) |
-| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.3.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.3.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.3.0/bh-agent-macos-arm64.tar.gz.sha256) |
-| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.3.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.3.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.3.0/bh-agent-macos-x86_64.tar.gz.sha256) |
+| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.3.1/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.3.1/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.3.1/bh-agent-linux-x86_64.tar.gz.sha256) |
+| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.3.1/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.3.1/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.3.1/bh-agent-macos-arm64.tar.gz.sha256) |
+| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.3.1/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.3.1/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.3.1/bh-agent-macos-x86_64.tar.gz.sha256) |
 
 Each release also ships the bare binary (`<asset>.bin`) with its own
 `.bin.sha256` and `.bin.sig.hex`. Those feed the agent's self-update endpoint
@@ -81,7 +81,7 @@ curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-release
 ### Manual install
 
 ```bash
-base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.3.0
+base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.3.1
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sig
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sha256
@@ -109,7 +109,7 @@ Re-run the same one-liner **with no `--token`, `--name` or `--api`**:
 curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/get-agent.sh | bash
 ```
 
-From v1.3.0 the installer detects an existing `config.yaml` and **preserves it** —
+From v1.3.1 the installer detects an existing `config.yaml` and **preserves it** —
 token, API URL, interval and any `screenshots` block are left alone; only the
 binary and the service unit are replaced. That is why no token is needed. Pass
 `--force-config` only when you deliberately want the configuration rewritten, for
@@ -122,7 +122,7 @@ Upgrade with the one-liner above.
 Verify afterwards:
 
 ```bash
-bh-agent --version          # expect 1.3.0
+bh-agent --version          # expect 1.3.1
 bh-agent config check       # confirms the preserved config still validates
 ```
 
@@ -142,16 +142,69 @@ this repo are clean. It only bites a browser download:
 xattr -cr <extracted-directory>
 ```
 
-## What is new in v1.3.0
+## What is new in v1.3.1
 
-**Wayland screen capture**, plus fixes for every problem found testing v1.2.0 on
-real devices.
+Three things: Wayland screen capture that is actually **silent**, independent
+on/off switches for the two subsystems, and much richer network reporting.
 
-Screen capture is opt-in and **disabled by default** (ADR-008). Upgrading does not
-enable it: a config with no `screenshots` block defaults to off.
+### Screen capture is silent now
+
+v1.3.0 shipped Wayland capture through the ScreenCast portal, but it never
+stored the consent token the portal handed back — so GNOME re-ran its
+source-picker dialog, with a preview of your screen and a notification sound,
+**on every single capture**. v1.3.1 stores it. The first capture after
+upgrading asks once; every one after that is silent.
+
+### Two independent switches
+
+Device reporting and screen capture are separate subsystems and now have
+separate switches. Turning one off says nothing about the other.
 
 ```bash
-sudo bh-agent screenshots enable --restart
+bh-agent metrics status              # is this device reporting?
+bh-agent screenshots status          # is this device capturing?
+
+sudo bh-agent metrics disable --restart   # stop reporting, stay registered
+sudo bh-agent screenshots enable          # opt in to capture
+```
+
+`screenshots disable` now actually stops capture. In v1.3.0 it wrote the daemon
+config and restarted the root daemon — which does not capture — while the
+per-user capture service carried on running. If you relied on it to stop
+capture on a device, **it did not**.
+
+`--restart` is no longer needed on `screenshots enable`/`disable`; both apply
+immediately. The flag is still accepted and ignored.
+
+### Network reporting
+
+Per interface: type (wifi/ethernet/bridge/virtual), IPv4 and IPv6, MAC,
+throughput in bytes per second, and for wireless links the **SSID and signal
+strength**. Plus the device's default routes, and its public IP as seen by the
+platform.
+
+> **SSID and public IP are location data.** A network name resolves to a
+> street-level position through public wifi geolocation databases. This is
+> collected by default in v1.3.1.
+
+### Also fixed
+
+- `bh-agent screenshots status` works for the ordinary user it is meant for. In
+  v1.3.0 it aborted with a permission error before printing anything, while the
+  root-run output told you to run exactly that command.
+- The Wayland runtime packages (`gstreamer1.0-pipewire`,
+  `gstreamer1.0-plugins-good`) install automatically. v1.3.0 needed a manual
+  `apt install` that was not documented anywhere.
+- A Wayland display no longer reports as `0x0` — the portal does not enumerate
+  screens, and that zero read as a broken display.
+
+### Upgrade notes
+
+Screen capture stays opt-in and **disabled by default** (ADR-008). Upgrading
+does not enable it. Device reporting stays on, as before.
+
+```bash
+sudo bh-agent screenshots enable
 sudo bh-agent screenshots install    # run via sudo from the account to capture
 bh-agent screenshots status          # NOT under sudo — see below
 ```
@@ -169,7 +222,7 @@ System Settings > Privacy & Security > Screen Recording > **+** > `⌘⇧G` >
 `sudo bh-agent screenshots install` to restart the capture agent.
 
 Without it, macOS returns the desktop wallpaper with every other application's
-windows stripped out — captures look valid but show nothing useful. v1.3.0 refuses
+windows stripped out — captures look valid but show nothing useful. v1.3.1 refuses
 to capture in that state rather than uploading wallpaper; v1.2.0 uploaded it.
 
 ### Linux
@@ -220,7 +273,67 @@ record of every process on the host, including other users' names and executable
 paths. Windows also has no service registration (it cannot run as a Windows
 service), no installer, and `bh-agent update` refuses to run.
 
-Use Linux or macOS. Windows support is planned; it is not ready.
+Use Linux or macOS for anything real. Windows support is planned; it is not
+ready.
+
+### Running it on Windows anyway, to test
+
+There is no installer and no service, so a Windows run is a foreground process
+you start yourself and stop with Ctrl-C. Use a scratch machine or VM, not
+anything with other people's data on it — the queue database limitation below
+is not theoretical.
+
+**1. Get the binary.** It is not published here. Take it from the Actions run
+for the release tag, under Artifacts, named
+`UNSUPPORTED-windows-x86_64-internal-testing` — it contains `bh-agent.exe` and
+an `UNSUPPORTED.txt` restating these limits. Or build it yourself on the
+Windows box:
+
+```powershell
+cargo build --release --target x86_64-pc-windows-msvc
+```
+
+**2. Write a config.** The agent looks in `%ProgramData%\bh-agent\config.yaml`
+by default. In PowerShell **as Administrator**:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:ProgramData\bh-agent" | Out-Null
+@"
+api:
+  base_url: https://edm.beehiveinteractive.net/api/v1
+  timeout_seconds: 30
+  token: bh_live_replace_me
+agent:
+  name: $env:COMPUTERNAME
+  interval_minutes: 5
+logging:
+  level: info
+"@ | Set-Content -Encoding utf8 "$env:ProgramData\bh-agent\config.yaml"
+```
+
+**3. Check it parses, then run it.**
+
+```powershell
+.\bh-agent.exe config check
+.\bh-agent.exe
+```
+
+`config check` prints the effective settings and exits — do that first, because
+a bad config is the most common reason the agent appears to start and then
+stops. `state.json` and `queue.sqlite` are written next to the config.
+
+**What will not work, by design:**
+
+| | Why |
+|---|---|
+| Running as a service | No Service Control Manager registration. Closing the console stops the agent. |
+| `bh-agent update` | Refuses on Windows — `updater::supported()` returns false. |
+| `bh-agent screenshots *` | Per-user capture is systemd/launchd only. Reports unsupported and exits. |
+| Network SSID / routes | The Windows provider returns nothing. Interface names, addresses, MAC and throughput still work. |
+| File permissions | **The real blocker.** `queue.sqlite` inherits `%ProgramData%` and is readable by every local account. It holds a rolling multi-day record of every process on the host, including other users' names and executable paths. |
+
+What you *can* usefully test: registration, the report payload, CPU/memory/disk
+metrics, the offline queue and its retry behaviour, and the process list.
 
 ## Older releases
 
@@ -228,6 +341,11 @@ Only the current release is kept here. Earlier versions are removed rather than
 left in place: every one of them either fails to install or predates a fix that
 matters.
 
+- **v1.3.0** — first Wayland capture, but it never stored the portal's consent
+  token, so GNOME showed its source-picker dialog — screen preview and sound —
+  on every capture rather than once. `screenshots disable` also did not stop
+  capture: it restarted the root daemon, which does not capture, while the
+  per-user service kept running. Both fixed in v1.3.1.
 - **v1.2.0** — shipped screen capture with a macOS permission gate that had been
   weakened, so a Mac without Screen Recording consent uploaded pictures of the
   desktop wallpaper instead of the screen. Its per-user capture service also used
