@@ -8,20 +8,43 @@ access token.
 
 ## Latest release
 
-**v1.4.0**
+**v1.6.0**
 
 | Platform | Archive | Signature | Checksum |
 |---|---|---|---|
-| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.4.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.4.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.4.0/bh-agent-linux-x86_64.tar.gz.sha256) |
-| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.4.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.4.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.4.0/bh-agent-macos-arm64.tar.gz.sha256) |
-| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.4.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.4.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.4.0/bh-agent-macos-x86_64.tar.gz.sha256) |
+| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.6.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.6.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.6.0/bh-agent-linux-x86_64.tar.gz.sha256) |
+| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.6.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.6.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.6.0/bh-agent-macos-arm64.tar.gz.sha256) |
+| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.6.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.6.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.6.0/bh-agent-macos-x86_64.tar.gz.sha256) |
+
+### Graphical installers (new in v1.6.0)
+
+For machines you configure by hand rather than by script. Both ask for the
+device token, the API URL and the reporting settings through a real form, so
+nothing has to be composed on a command line.
+
+| Platform | Package | Signature | Checksum |
+|---|---|---|---|
+| Ubuntu | [bh-agent_1.6.0_amd64.deb](releases/v1.6.0/bh-agent_1.6.0_amd64.deb) | [.sig](releases/v1.6.0/bh-agent_1.6.0_amd64.deb.sig) | [.sha256](releases/v1.6.0/bh-agent_1.6.0_amd64.deb.sha256) |
+| macOS (universal) | [bh-agent-1.6.0-macos.pkg](releases/v1.6.0/bh-agent-1.6.0-macos.pkg) | [.sig](releases/v1.6.0/bh-agent-1.6.0-macos.pkg.sig) | [.sha256](releases/v1.6.0/bh-agent-1.6.0-macos.pkg.sha256) |
+
+```bash
+sudo apt install ./bh-agent_1.6.0_amd64.deb      # Ubuntu
+open bh-agent-1.6.0-macos.pkg                    # macOS, or double-click
+```
+
+The `.deb` asks through **debconf**, so GNOME Software or `gdebi` draws the
+form and the same questions appear in a terminal dialog over SSH. The `.pkg`
+uses Installer.app for the install and native dialogs for the questions. One
+`.pkg` covers Apple Silicon and Intel.
+
+Verify the signature first — the same way as an archive, shown under
+[Verify before installing](#verify-before-installing).
 
 Each release also ships the bare binary (`<asset>.bin`) with its own
 `.bin.sha256` and `.bin.sig.hex`. Those feed the agent's self-update endpoint
 and are not needed for a manual install.
 
-v1.4.0 is a maintenance release — no behavior change for already-installed
-agents. See [Changelog](#changelog) for details.
+See [Changelog](#changelog) for what changed.
 
 ## Install
 
@@ -36,7 +59,7 @@ curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-release
 ### Manual install
 
 ```bash
-base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.4.0
+base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.6.0
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sig
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sha256
@@ -134,6 +157,14 @@ binary and the service unit are replaced. That is why no token is needed. Pass
 `--force-config` only when you deliberately want the configuration rewritten, for
 example to rotate the token.
 
+Since v1.6.0 an upgrade also **offers the reporting settings**, defaulted to what
+the device is set to now: how often to report, whether to capture the screen, and
+how often. Press Enter through them to change nothing — only a setting you
+actually change is written, and it is written with `bh-agent config set`, which
+edits that one line and leaves the token and everything else alone. Supply
+`--interval`, `--screenshots`/`--no-screenshots` or `--screenshot-interval` to
+answer non-interactively; with no terminal at all the current values are kept.
+
 **`bh-agent update` does not work against the current platform.** It calls
 `GET /devices/update`, which the platform does not implement, so the request 404s.
 Upgrade with the one-liner above.
@@ -141,7 +172,7 @@ Upgrade with the one-liner above.
 Verify afterwards:
 
 ```bash
-bh-agent --version          # expect 1.4.0
+bh-agent --version          # expect 1.6.0
 bh-agent config check       # confirms the preserved config still validates
 ```
 
@@ -219,87 +250,76 @@ platform.
 
 ## Windows
 
-**Not supported. Do not deploy.**
+**Supported since v1.5.0** — but **not published in this repository**, and that
+is deliberate.
 
-No Windows build is published here, and that is deliberate rather than an
-oversight. CI does compile and test a Windows binary, but it is retained only as
-an internal-testing artifact and is deliberately excluded from every release —
-publishing it alongside the supported builds would invite someone to deploy it.
+The blockers that made Windows unusable are gone: it registers as a real
+Windows Service through the SCM, ships a one-click installer, restricts the
+queue database to SYSTEM and Administrators with an explicit DACL, captures
+screens, and can self-update. The feature set matches Linux and macOS apart
+from the gaps listed below.
 
-The blocking gap is file access control. The agent applies Unix permissions
-only, so on Windows the queue database inherits whatever `%ProgramData%` grants
-and is **readable by every local user**. That database holds a rolling multi-day
-record of every process on the host, including other users' names and executable
-paths. Windows also has no service registration (it cannot run as a Windows
-service), no installer, and `bh-agent update` refuses to run.
+What is missing is a **code-signing certificate**. `bh-agent.exe` and
+`bh-agent-setup.exe` carry no Authenticode signature, so SmartScreen shows
+*"Windows protected your PC"* on first run. Publishing them here, next to
+artifacts an operator is told to trust, would train people to click through
+exactly the warning that should stop them. So the Windows build ships as a
+**workflow artifact** on the private repository instead — built, tested and
+packaged on every tag.
 
-Use Linux or macOS for anything real. Windows support is planned; it is not
-ready.
-
-### Running it on Windows anyway, to test
-
-There is no installer and no service, so a Windows run is a foreground process
-you start yourself and stop with Ctrl-C. Use a scratch machine or VM, not
-anything with other people's data on it — the queue database limitation above
-is not theoretical.
-
-**1. Get the binary.** It is not published here. Take it from the Actions run
-for the release tag, under Artifacts, named
-`UNSUPPORTED-windows-x86_64-internal-testing` — it contains `bh-agent.exe` and
-an `UNSUPPORTED.txt` restating these limits. Or build it yourself on the
-Windows box:
+Get it from the release run's Artifacts, named `bh-agent-windows-x86_64-exe`.
+It contains `bh-agent-setup.exe`, `bh-agent.exe`, `config.example.yaml` and a
+`HOW-TO-RUN.txt`.
 
 ```powershell
-cargo build --release --target x86_64-pc-windows-msvc
+.\bh-agent-setup.exe                        # double-click; the wizard asks for everything
+.\bh-agent-setup.exe /VERYSILENT /TOKEN=... /API=... /NAME=...   # unattended
 ```
 
-**2. Write a config.** The agent looks in `%ProgramData%\bh-agent\config.yaml`
-by default. In PowerShell **as Administrator**:
+On first run choose **More info → Run anyway**. That warning is about the
+absent certificate, not about anything detected in the file.
 
-```powershell
-New-Item -ItemType Directory -Force "$env:ProgramData\bh-agent" | Out-Null
-@"
-api:
-  base_url: https://edm.beehiveinteractive.net/api/v1
-  timeout_seconds: 30
-  token: bh_live_replace_me
-agent:
-  name: $env:COMPUTERNAME
-  interval_minutes: 5
-logging:
-  level: info
-"@ | Set-Content -Encoding utf8 "$env:ProgramData\bh-agent\config.yaml"
-```
+Upgrading re-runs the same installer. It never asks for the token again — the
+existing `config.yaml` is kept — but it does offer the reporting settings,
+pre-filled with the device's current values.
 
-**3. Check it parses, then run it.**
+### What still does not work on Windows
 
-```powershell
-.\bh-agent.exe config check
-.\bh-agent.exe
-```
-
-`config check` prints the effective settings and exits — do that first, because
-a bad config is the most common reason the agent appears to start and then
-stops. `state.json` and `queue.sqlite` are written next to the config.
-
-**What will not work, by design:**
-
-| | Why |
+| | Status |
 |---|---|
-| Running as a service | No Service Control Manager registration. Closing the console stops the agent. |
-| `bh-agent update` | Refuses on Windows — `updater::supported()` returns false. |
-| `bh-agent screenshots *` | Per-user capture is systemd/launchd only. Reports unsupported and exits. |
-| Network SSID / routes | The Windows provider returns nothing. Interface names, addresses, MAC and throughput still work. |
-| File permissions | **The real blocker.** `queue.sqlite` inherits `%ProgramData%` and is readable by every local account. It holds a rolling multi-day record of every process on the host, including other users' names and executable paths. |
-
-What you *can* usefully test: registration, the report payload, CPU/memory/disk
-metrics, the offline queue and its retry behaviour, and the process list.
+| Network SSID, signal, routes, interface type | The Windows provider returns nothing, and every interface reports type `other`. Names, addresses, MAC and throughput work. |
+| CPU temperature | Always absent. Windows exposes no consistent source: the usual WMI route is unimplemented by many OEM firmwares, needs administrator rights, and often reports an ACPI zone rather than the CPU package. Reporting nothing is deliberate — a wrong number is worse than none. Same on macOS. |
+| `bh-agent update` | Works in the agent, but there is no signed Windows asset to download, for the reason above. Upgrade by re-running the installer. |
+| `get-agent.sh` | Unix only. There is no one-line curl install for Windows. |
 
 ## Changelog
 
 Only the current release's artifacts are kept here (see "Older releases"
 below for why). This log covers what changed release to release.
 
+- **v1.6.0** — **graphical installers for Ubuntu and macOS**: a `.deb` driven
+  by debconf and a universal `.pkg` with native dialogs, both asking the same
+  questions as the Windows wizard. First install now asks how often to report
+  and whether to capture the screen, per subsystem, with capture defaulting to
+  off; an upgrade offers those same settings pre-filled with the device's
+  current values and writes only what changed, so the token, comments and any
+  hand-tuned key survive. `device_id` is now **derived from the host's machine
+  identity** rather than randomly generated, so a machine that is uninstalled
+  and reinstalled comes back as the same device instead of one its existing
+  token cannot register (an existing `state.json` is never recomputed, so
+  devices already enrolled keep their ID). New `bh-agent config get` prints one
+  setting for scripting. Also fixes a Windows installer script that had not
+  compiled since v1.5.0.
+- **v1.5.0** — **Windows became a real target.** Service registration through
+  the SCM with a proper stop/shutdown handler, a one-click Inno Setup installer
+  (GUI and silent), screen capture via GDI including multi-monitor and per-user
+  provisioning, self-update with a rename-aside swap so a running `.exe` can be
+  replaced, and — the change that unblocked deployment — an explicit DACL
+  restricting the queue database to SYSTEM and Administrators. Also hardened
+  everywhere: every spawned tool resolves to an absolute path instead of going
+  through `PATH`, numeric config settings are bounded so a typo cannot stall or
+  abort the daemon, and an unreadable queue row is parked rather than failing
+  its whole batch. Not published here — see [Windows](#windows).
 - **v1.4.0** — maintenance release, no runtime behavior change. Fixes a macOS
   CI build failure (`clippy::items_after_test_module` in
   `src/metrics/platform/macos.rs`) and updates install docs to reflect the
@@ -338,6 +358,9 @@ Only the current release is kept here. Earlier versions are removed rather than
 left in place: every one of them either fails to install or predates a fix that
 matters. If a device is still running an old release, upgrade from the current
 release rather than trying to patch in place.
+
+v1.5.0 was never published here — v1.6.0 supersedes it and includes everything
+it shipped.
 
 ## What this repo does not contain
 
