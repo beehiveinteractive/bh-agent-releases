@@ -8,34 +8,41 @@ access token.
 
 ## Latest release
 
-**v1.6.0**
+**v1.7.0**
 
 | Platform | Archive | Signature | Checksum |
 |---|---|---|---|
-| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.6.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.6.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.6.0/bh-agent-linux-x86_64.tar.gz.sha256) |
-| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.6.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.6.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.6.0/bh-agent-macos-arm64.tar.gz.sha256) |
-| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.6.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.6.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.6.0/bh-agent-macos-x86_64.tar.gz.sha256) |
+| Linux x86_64 | [bh-agent-linux-x86_64.tar.gz](releases/v1.7.0/bh-agent-linux-x86_64.tar.gz) | [.sig](releases/v1.7.0/bh-agent-linux-x86_64.tar.gz.sig) | [.sha256](releases/v1.7.0/bh-agent-linux-x86_64.tar.gz.sha256) |
+| macOS Apple Silicon | [bh-agent-macos-arm64.tar.gz](releases/v1.7.0/bh-agent-macos-arm64.tar.gz) | [.sig](releases/v1.7.0/bh-agent-macos-arm64.tar.gz.sig) | [.sha256](releases/v1.7.0/bh-agent-macos-arm64.tar.gz.sha256) |
+| macOS Intel | [bh-agent-macos-x86_64.tar.gz](releases/v1.7.0/bh-agent-macos-x86_64.tar.gz) | [.sig](releases/v1.7.0/bh-agent-macos-x86_64.tar.gz.sig) | [.sha256](releases/v1.7.0/bh-agent-macos-x86_64.tar.gz.sha256) |
 
-### Graphical installers (new in v1.6.0)
+### Graphical installers
 
-For machines you configure by hand rather than by script. Both ask for the
+For machines you configure by hand rather than by script. All three ask for the
 device token, the API URL and the reporting settings through a real form, so
 nothing has to be composed on a command line.
 
 | Platform | Package | Signature | Checksum |
 |---|---|---|---|
-| Ubuntu | [bh-agent_1.6.0_amd64.deb](releases/v1.6.0/bh-agent_1.6.0_amd64.deb) | [.sig](releases/v1.6.0/bh-agent_1.6.0_amd64.deb.sig) | [.sha256](releases/v1.6.0/bh-agent_1.6.0_amd64.deb.sha256) |
-| macOS (universal) | [bh-agent-1.6.0-macos.pkg](releases/v1.6.0/bh-agent-1.6.0-macos.pkg) | [.sig](releases/v1.6.0/bh-agent-1.6.0-macos.pkg.sig) | [.sha256](releases/v1.6.0/bh-agent-1.6.0-macos.pkg.sha256) |
+| Ubuntu | [bh-agent_1.7.0_amd64.deb](releases/v1.7.0/bh-agent_1.7.0_amd64.deb) | [.sig](releases/v1.7.0/bh-agent_1.7.0_amd64.deb.sig) | [.sha256](releases/v1.7.0/bh-agent_1.7.0_amd64.deb.sha256) |
+| macOS (universal) | [bh-agent-1.7.0-macos.pkg](releases/v1.7.0/bh-agent-1.7.0-macos.pkg) | [.sig](releases/v1.7.0/bh-agent-1.7.0-macos.pkg.sig) | [.sha256](releases/v1.7.0/bh-agent-1.7.0-macos.pkg.sha256) |
+| Windows x86_64 | [bh-agent-windows-x86_64-setup.exe](releases/v1.7.0/bh-agent-windows-x86_64-setup.exe) | [.sig](releases/v1.7.0/bh-agent-windows-x86_64-setup.exe.sig) | [.sha256](releases/v1.7.0/bh-agent-windows-x86_64-setup.exe.sha256) |
 
 ```bash
-sudo apt install ./bh-agent_1.6.0_amd64.deb      # Ubuntu
-open bh-agent-1.6.0-macos.pkg                    # macOS, or double-click
+sudo apt install ./bh-agent_1.7.0_amd64.deb      # Ubuntu
+open bh-agent-1.7.0-macos.pkg                    # macOS, or double-click
+```
+
+```powershell
+.\bh-agent-windows-x86_64-setup.exe              # Windows; see the Windows section
 ```
 
 The `.deb` asks through **debconf**, so GNOME Software or `gdebi` draws the
 form and the same questions appear in a terminal dialog over SSH. The `.pkg`
 uses Installer.app for the install and native dialogs for the questions. One
-`.pkg` covers Apple Silicon and Intel.
+`.pkg` covers Apple Silicon and Intel. The Windows installer is an Inno Setup
+wizard; it is not Authenticode-signed, so expect the SmartScreen prompt
+described under [Windows](#windows).
 
 Verify the signature first — the same way as an archive, shown under
 [Verify before installing](#verify-before-installing).
@@ -59,7 +66,7 @@ curl -fsSL https://raw.githubusercontent.com/beehiveinteractive/bh-agent-release
 ### Manual install
 
 ```bash
-base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.6.0
+base=https://raw.githubusercontent.com/beehiveinteractive/bh-agent-releases/main/releases/v1.7.0
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sig
 curl -fsSLO $base/bh-agent-linux-x86_64.tar.gz.sha256
@@ -172,7 +179,7 @@ Upgrade with the one-liner above.
 Verify afterwards:
 
 ```bash
-bh-agent --version          # expect 1.6.0
+bh-agent --version          # expect 1.7.0
 bh-agent config check       # confirms the preserved config still validates
 ```
 
@@ -250,38 +257,46 @@ platform.
 
 ## Windows
 
-**Supported since v1.5.0** — but **not published in this repository**, and that
-is deliberate.
+**Supported since v1.5.0, published here since v1.7.0.**
 
-The blockers that made Windows unusable are gone: it registers as a real
-Windows Service through the SCM, ships a one-click installer, restricts the
-queue database to SYSTEM and Administrators with an explicit DACL, captures
-screens, and can self-update. The feature set matches Linux and macOS apart
-from the gaps listed below.
+It registers as a real Windows Service through the SCM, ships a one-click
+installer, restricts the queue database to SYSTEM and Administrators with an
+explicit DACL, and captures screens. The feature set matches Linux and macOS
+apart from the gaps listed below.
 
-What is missing is a **code-signing certificate**. `bh-agent.exe` and
-`bh-agent-setup.exe` carry no Authenticode signature, so SmartScreen shows
-*"Windows protected your PC"* on first run. Publishing them here, next to
-artifacts an operator is told to trust, would train people to click through
-exactly the warning that should stop them. So the Windows build ships as a
-**workflow artifact** on the private repository instead — built, tested and
-packaged on every tag.
+Two files, each with a `.sha256` and an Ed25519 `.sig` beside it:
 
-Get it from the release run's Artifacts, named `bh-agent-windows-x86_64-exe`.
-It contains `bh-agent-setup.exe`, `bh-agent.exe`, `config.example.yaml` and a
-`HOW-TO-RUN.txt`.
+- [bh-agent-windows-x86_64-setup.exe](releases/v1.7.0/bh-agent-windows-x86_64-setup.exe) — the installer; start here
+- [bh-agent-windows-x86_64.exe](releases/v1.7.0/bh-agent-windows-x86_64.exe) — the bare agent, for running by hand
 
 ```powershell
-.\bh-agent-setup.exe                        # double-click; the wizard asks for everything
-.\bh-agent-setup.exe /VERYSILENT /TOKEN=... /API=... /NAME=...   # unattended
+.\bh-agent-windows-x86_64-setup.exe         # double-click; the wizard asks for everything
+.\bh-agent-windows-x86_64-setup.exe /VERYSILENT /TOKEN=... /API=... /NAME=...   # unattended
 ```
 
-On first run choose **More info → Run anyway**. That warning is about the
-absent certificate, not about anything detected in the file.
+They carry **no Authenticode signature** — there is no code-signing
+certificate yet — so SmartScreen shows *"Windows protected your PC"* on first
+run. Choose **More info → Run anyway**. That warning is about the absent
+certificate, not about anything detected in the file; the Ed25519 signature
+beside each file is what actually vouches for it (same verification as every
+other artifact — OpenSSL 3 on Windows comes with Git for Windows, as
+`"C:\Program Files\Git\usr\bin\openssl.exe"`).
+
+Publishing unsigned Windows binaries next to artifacts an operator is told to
+trust was previously avoided on purpose; it is now an explicit, accepted
+tradeoff (v1.7.0) so Windows devices have a first-class download path.
 
 Upgrading re-runs the same installer. It never asks for the token again — the
 existing `config.yaml` is kept — but it does offer the reporting settings,
 pre-filled with the device's current values.
+
+> **Upgrading from a pre-v1.7.0 install** (one downloaded from the private
+> repository's workflow artifacts): v1.7.0 regenerated the installer's
+> product GUID, which had shipped as a placeholder. Windows therefore treats
+> v1.7.0 as a new product — the old entry stays in "Apps" until you remove it
+> once. Uninstall the old entry, then run the v1.7.0 installer; the device's
+> `config.yaml` and identity survive, since uninstall leaves
+> `%ProgramData%\bh-agent` in place.
 
 ### What still does not work on Windows
 
@@ -289,7 +304,7 @@ pre-filled with the device's current values.
 |---|---|
 | Network SSID, signal, routes, interface type | The Windows provider returns nothing, and every interface reports type `other`. Names, addresses, MAC and throughput work. |
 | CPU temperature | Always absent. Windows exposes no consistent source: the usual WMI route is unimplemented by many OEM firmwares, needs administrator rights, and often reports an ACPI zone rather than the CPU package. Reporting nothing is deliberate — a wrong number is worse than none. Same on macOS. |
-| `bh-agent update` | Works in the agent, but there is no signed Windows asset to download, for the reason above. Upgrade by re-running the installer. |
+| `bh-agent update` | Disabled in the agent on Windows. The updater's download path expects the `.bin` + `.sig.hex` asset shape, and Windows publishes `.exe` files with archive-style signatures instead. Upgrade by re-running the installer. |
 | `get-agent.sh` | Unix only. There is no one-line curl install for Windows. |
 
 ## Changelog
@@ -297,6 +312,25 @@ pre-filled with the device's current values.
 Only the current release's artifacts are kept here (see "Older releases"
 below for why). This log covers what changed release to release.
 
+- **v1.7.0** — **Windows binaries are published here for the first time**:
+  `bh-agent-windows-x86_64-setup.exe` and `bh-agent-windows-x86_64.exe`,
+  Ed25519-signed like every other artifact but not Authenticode-signed — an
+  explicit, accepted tradeoff so Windows devices get a first-class download
+  path (SmartScreen prompts once; see the Windows section, including the
+  one-time old-entry cleanup for devices installed from pre-1.7 workflow
+  artifacts). The macOS installer's GUI is fixed: welcome and conclusion pages
+  render as HTML again instead of raw source, and the brand mark — its black
+  corners now transparent — sits as a small badge in the lower-left instead of
+  filling the pane. The Windows wizard gained the same
+  what-this-installs / what-it-never-collects page the macOS installer shows.
+  Under the hood, a full-codebase audit hardened the agent: Windows
+  private-file helpers refuse pre-planted NTFS reparse points (symlinks,
+  junctions, mount points) before writing or applying a DACL; the daemon's
+  Windows log directory is created with its restrictive ACL before the first
+  log line; a failed hand-over of the per-user capture unit now fails the
+  install loudly instead of leaving a service that never loads; and screen
+  capture validates frame stride and buffer arithmetic before touching pixel
+  memory.
 - **v1.6.0** — **graphical installers for Ubuntu and macOS**: a `.deb` driven
   by debconf and a universal `.pkg` with native dialogs, both asking the same
   questions as the Windows wizard. First install now asks how often to report
